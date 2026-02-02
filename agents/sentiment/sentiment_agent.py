@@ -6,8 +6,16 @@
 负责新闻情绪、事件影响、市场热度分析
 """
 
+import sys
+import os
 from typing import Dict, List
 from dataclasses import dataclass, field
+
+# 添加项目根目录到路径
+project_root = os.path.join(os.path.dirname(__file__), '..', '..')
+sys.path.insert(0, project_root)
+
+from dataflows.news_data import get_news_provider
 
 
 @dataclass
@@ -32,7 +40,7 @@ class SentimentAnalysisAgent:
         """
         执行情绪分析
 
-        注意：目前为简化版本，未来需要接入真实新闻和社交媒体数据
+        使用真实新闻数据源（新浪财经、东方财富），如果不可用则使用模拟数据
 
         Args:
             symbol: 股票代码
@@ -43,17 +51,33 @@ class SentimentAnalysisAgent:
         """
         result = SentimentAnalysisResult()
 
-        # TODO: 接入真实新闻和社交媒体数据
-        # - 新闻API（如新浪财经、东方财富）
-        # - 社交媒体API（如微博、雪球）
-        # - 情绪分析模型（如BERT、LSTM）
+        # 获取新闻数据
+        provider = get_news_provider()
+        news_list = provider.fetch_news(symbol, count=10, use_cache=True)
 
-        # 目前使用模拟数据作为占位符
-        result.news_sentiment = "中性"
-        result.event_impact = "无影响"
-        result.market_heat = "中"
-        result.sentiment_score = 0.1
-        result.social_mentions = 50
+        # 分析新闻情绪
+        sentiment = provider.analyze_sentiment(news_list)
+
+        # 填充数据
+        result.news_sentiment = sentiment['sentiment']
+        result.sentiment_score = sentiment['score']
+        result.social_mentions = len(news_list)
+
+        # 判断事件影响
+        if sentiment['sentiment'] == '正面':
+            result.event_impact = "利好"
+        elif sentiment['sentiment'] == '负面':
+            result.event_impact = "利空"
+        else:
+            result.event_impact = "无影响"
+
+        # 判断市场热度
+        if len(news_list) > 20:
+            result.market_heat = "高"
+        elif len(news_list) > 10:
+            result.market_heat = "中"
+        else:
+            result.market_heat = "低"
 
         # 计算评分
         result.score = self._calculate_score(result)
@@ -62,7 +86,8 @@ class SentimentAnalysisAgent:
         result.signals = self._generate_signals(result)
 
         if self.debug:
-            print(f"  ✅ 情绪分析完成，评分: {result.score*100:.0f}%")
+            source = news_list[0].get('source', 'N/A') if news_list else 'N/A'
+            print(f"  ✅ 情绪分析完成，评分: {result.score*100:.0f}% (来源: {source})")
             print(f"     新闻情绪: {result.news_sentiment}, 市场热度: {result.market_heat}")
 
         return result
