@@ -1,0 +1,235 @@
+{
+  "symbols": [
+    "601888",
+    "603633",
+    "000665",
+    "000725",
+    "688568",
+    "600745",
+    "600536",
+    "300415"
+  ],
+  "predict_days": 3,
+  "results": [
+    {
+      "symbol": "601888",
+      "predict_days": 3,
+      "total_days": 3,
+      "correct_days": 1,
+      "accuracy": 0.3333333333333333,
+      "details": [
+        {
+          "day": 1,
+          "predicted": "上涨",
+          "actual": "下跌",
+          "correct": false
+        },
+        {
+          "day": 2,
+          "predicted": "上涨",
+          "actual": "横盘",
+          "correct": true
+        },
+        {
+          "day": 3,
+          "predicted": "上涨",
+          "actual": "下跌",
+          "correct": false
+        }
+      ]
+    },
+    {
+      "symbol": "603633",
+      "predict_days": 3,
+      "total_days": 3,
+      "correct_days": 2,
+      "accuracy": 0.6666666666666666,
+      "details": [
+        {
+          "day": 1,
+          "predicted": "下跌",
+          "actual": "上涨",
+          "correct": false
+        },
+        {
+          "day": 2,
+          "predicted": "下跌",
+          "actual": "下跌",
+          "correct": true
+        },
+        {
+          "day": 3,
+          "predicted": "上涨",
+          "actual": "上涨",
+          "correct": true
+        }
+      ]
+    },
+    {
+      "symbol": "000665",
+      "predict_days": 3,
+      "total_days": 3,
+      "correct_days": 1,
+      "accuracy": 0.3333333333333333,
+      "details": [
+        {
+          "day": 1,
+          "predicted": "下跌",
+          "actual": "上涨",
+          "correct": false
+        },
+        {
+          "day": 2,
+          "predicted": "下跌",
+          "actual": "下跌",
+          "correct": true
+        },
+        {
+          "day": 3,
+          "predicted": "下跌",
+          "actual": "上涨",
+          "correct": false
+        }
+      ]
+    },
+    {
+      "symbol": "000725",
+      "predict_days": 3,
+      "total_days": 3,
+      "correct_days": 2,
+      "accuracy": 0.6666666666666666,
+      "details": [
+        {
+          "day": 1,
+          "predicted": "下跌",
+          "actual": "上涨",
+          "correct": false
+        },
+        {
+          "day": 2,
+          "predicted": "下跌",
+          "actual": "下跌",
+          "correct": true
+        },
+        {
+          "day": 3,
+          "predicted": "下跌",
+          "actual": "下跌",
+          "correct": true
+        }
+      ]
+    },
+    {
+      "symbol": "688568",
+      "predict_days": 3,
+      "total_days": 3,
+      "correct_days": 2,
+      "accuracy": 0.6666666666666666,
+      "details": [
+        {
+          "day": 1,
+          "predicted": "下跌",
+          "actual": "上涨",
+          "correct": false
+        },
+        {
+          "day": 2,
+          "predicted": "上涨",
+          "actual": "上涨",
+          "correct": true
+        },
+        {
+          "day": 3,
+          "predicted": "上涨",
+          "actual": "上涨",
+          "correct": true
+        }
+      ]
+    },
+    {
+      "symbol": "600745",
+      "predict_days": 3,
+      "total_days": 3,
+      "correct_days": 2,
+      "accuracy": 0.6666666666666666,
+      "details": [
+        {
+          "day": 1,
+          "predicted": "上涨",
+          "actual": "下跌",
+          "correct": false
+        },
+        {
+          "day": 2,
+          "predicted": "下跌",
+          "actual": "下跌",
+          "correct": true
+        },
+        {
+          "day": 3,
+          "predicted": "上涨",
+          "actual": "上涨",
+          "correct": true
+        }
+      ]
+    },
+    {
+      "symbol": "600536",
+      "predict_days": 3,
+      "total_days": 3,
+      "correct_days": 3,
+      "accuracy": 1.0,
+      "details": [
+        {
+          "day": 1,
+          "predicted": "下跌",
+          "actual": "下跌",
+          "correct": true
+        },
+        {
+          "day": 2,
+          "predicted": "上涨",
+          "actual": "上涨",
+          "correct": true
+        },
+        {
+          "day": 3,
+          "predicted": "下跌",
+          "actual": "下跌",
+          "correct": true
+        }
+      ]
+    },
+    {
+      "symbol": "300415",
+      "predict_days": 3,
+      "total_days": 3,
+      "correct_days": 3,
+      "accuracy": 1.0,
+      "details": [
+        {
+          "day": 1,
+          "predicted": "下跌",
+          "actual": "下跌",
+          "correct": true
+        },
+        {
+          "day": 2,
+          "predicted": "下跌",
+          "actual": "下跌",
+          "correct": true
+        },
+        {
+          "day": 3,
+          "predicted": "下跌",
+          "actual": "下跌",
+          "correct": true
+        }
+      ]
+    }
+  ],
+  "avg_accuracy": 0.6666666666666666,
+  "max_accuracy": 1.0,
+  "min_accuracy": 0.3333333333333333,
+  "win_rate": 0.75
+}
