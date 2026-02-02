@@ -1,0 +1,28 @@
+{
+  "stocks": [
+    {
+      "symbol": "sh000063=\"1",
+      "name": "上证周期",
+      "price": 3974.06,
+      "yesterday_close": 4081.09,
+      "change_percent": -2.6225836724992635,
+      "volume": 102599847
+    },
+    {
+      "symbol": "sh600519=\"1",
+      "name": "贵州茅台",
+      "price": 1427.0,
+      "yesterday_close": 1401.0,
+      "change_percent": 1.8558172733761598,
+      "volume": 85724
+    },
+    {
+      "symbol": "sh000858=\"1",
+      "name": "500信息",
+      "price": 11391.09,
+      "yesterday_close": 12015.78,
+      "change_percent": -5.198913428841078,
+      "volume": 30758790
+    }
+  ]
+}

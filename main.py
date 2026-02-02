@@ -11,6 +11,8 @@ import os
 # 添加项目根目录到路径
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
+# 导入固定版本的stock_api
+from scripts.stock_api_fixed import fetch_stock_data, fetch_historical_data
 from graph.trading_graph import TradingAgentsGraph
 
 

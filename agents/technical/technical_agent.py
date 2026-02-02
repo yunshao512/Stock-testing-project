@@ -14,7 +14,7 @@ from dataclasses import dataclass, field
 # 添加scripts目录到路径
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..', 'scripts'))
 
-from stock_api import fetch_stock_data
+from stock_api_fixed import fetch_stock_data
 from historical_data import fetch_historical_data
 
 # 添加项目根目录到路径

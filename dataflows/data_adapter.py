@@ -41,6 +41,9 @@ class TencentDataSource(StockDataSource):
     def __init__(self):
         self.name = "腾讯财经"
         self.base_url = "https://qt.gtimg.cn/q="
+        self.headers = {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+        }
 
     def fetch_stock_data(self, symbols: List[str]) -> List[Dict]:
         """获取股票实时数据"""
@@ -62,10 +65,7 @@ class TencentDataSource(StockDataSource):
             url = f"{self.base_url}{','.join(symbol_list)}"
 
             # 请求数据
-            headers = {
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
-            }
-            response = requests.get(url, headers=headers, timeout=10)
+            response = requests.get(url, headers=self.headers, timeout=10)
             response.encoding = 'gbk'
 
             # 解析数据
@@ -78,14 +78,14 @@ class TencentDataSource(StockDataSource):
                     if len(parts) > 40:
                         symbol = parts[0][2:]  # 去掉 'v_' 前缀
                         name = parts[1]
-                        price = float(parts[3]) if parts[3] else 0.0
-                        yesterday_close = float(parts[4]) if parts[4] else 0.0
+                        price = float(parts[3]) if parts[3] and parts[3] != '' else 0.0
+                        yesterday_close = float(parts[4]) if parts[4] and parts[4] != '' else 0.0
                         change_percent = 0.0
 
-                        if yesterday_close > 0:
+                        if yesterday_close > 0 and price > 0:
                             change_percent = ((price - yesterday_close) / yesterday_close) * 100
 
-                        volume = int(parts[6]) if parts[6] else 0
+                        volume = int(parts[6]) if parts[6] and parts[6] != '' else 0
 
                         stock_data = {
                             'symbol': symbol,
