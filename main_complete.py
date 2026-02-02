@@ -14,6 +14,9 @@ from datetime import datetime, timedelta
 from typing import List, Dict
 import random
 
+# 导入时间序列预测器
+from models.time_series_predictor import TimeSeriesPredictor
+
 
 class SimpleStockSystem:
     """简化版股票预测系统（完整版）"""
@@ -468,62 +471,9 @@ class SimpleStockSystem:
 
     def _generate_forecast(self, candles: List[Dict], technical: Dict) -> Dict:
         """生成未来一周走势预测"""
-        if len(candles) < 5:
-            return {
-                'forecast': "数据不足，无法预测",
-                'confidence': 0,
-                'prediction': []
-            }
-
-        # 简化版预测：基于趋势和RSI
-        trend = technical.get('trend', '横盘')
-        rsi = technical.get('rsi', 50)
-
-        # 预测7天走势
-        predictions = []
-        base_price = candles[-1]['close']
-
-        for i in range(7):
-            date = (datetime.now() + timedelta(days=i+1)).strftime('%Y-%m-%d')
-
-            if trend == "上升":
-                change = random.uniform(0.5, 2.0)  # 上涨
-                direction = "上涨"
-            elif trend == "下降":
-                change = random.uniform(-2.0, -0.5)  # 下跌
-                direction = "下跌"
-            else:
-                change = random.uniform(-1.0, 1.0)  # 震荡
-                direction = random.choice(["上涨", "下跌", "横盘"])
-
-            # RSI调整
-            if rsi > 70:
-                change *= 0.5  # 超买，涨幅减小
-            elif rsi < 30:
-                change *= 1.5  # 超卖，涨幅增大
-
-            pred_price = base_price * (1 + change / 100)
-
-            predictions.append({
-                'date': date,
-                'predicted_price': round(pred_price, 2),
-                'change_percent': round(change, 2),
-                'direction': direction
-            })
-
-            base_price = pred_price
-
-        # 信心度
-        if trend in ["上升", "下降"]:
-            confidence = 65
-        else:
-            confidence = 50
-
-        return {
-            'forecast': f"未来一周走势预测（基于{trend}趋势）",
-            'confidence': confidence,
-            'prediction': predictions
-        }
+        # 使用时间序列预测器
+        predictor = TimeSeriesPredictor()
+        return predictor.predict(candles, days=7)
 
 
 def main():
