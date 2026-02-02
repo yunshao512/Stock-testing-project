@@ -1,212 +1,106 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-import urllib.request
-import urllib.parse
-import json
-import time
-from datetime import datetime
-from typing import List, Dict, Optional, Any
-from stock_cache import StockDataCache, RateLimiter
+"""
+股票数据获取模块 - 使用数据适配器
+集成多数据源和缓存机制
+"""
 
-# 腾讯财经API
-API_URL = "http://qt.gtimg.cn/q={codes}"
+import sys
+import os
+from typing import List
 
-# 初始化缓存和限流器
-cache = StockDataCache(cache_ttl=60)  # 缓存60秒
-rate_limiter = RateLimiter(max_requests=10, time_window=60)  # 每分钟最多10次请求
+# 添加项目根目录到路径
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-def fetch_stock_data(stock_codes: List[str], use_cache=True) -> Optional[List[Dict]]:
+from dataflows import get_adapter, get_cache
+
+
+def fetch_stock_data(symbols: list, use_cache: bool = True) -> list:
     """
-    获取股票数据（带缓存和限流）
+    获取股票实时数据（使用数据适配器）
 
     Args:
-        stock_codes: 股票代码列表
+        symbols: 股票代码列表（如 ['600519', '000858']）
         use_cache: 是否使用缓存
 
     Returns:
         股票数据列表
     """
-    # 合并代码，减少API调用
-    cache_key = ",".join(sorted(stock_codes))
+    adapter = get_adapter()
+    cache = get_cache()
 
     # 尝试从缓存获取
     if use_cache:
-        cached_data = cache.get(cache_key)
+        cache_key = ','.join(sorted(symbols))
+        cached_data = cache.get('stock_data', symbols=cache_key)
+
         if cached_data:
-            print(f"📦 使用缓存数据 ({cache_key})")
-            return cached_data
+            print(f"✅ [缓存] 使用缓存的股票数据")
+            return cached_data.get('stocks', [])
 
-    # 检查频率限制
-    if not rate_limiter.can_request():
-        wait_time = rate_limiter.get_wait_time()
-        status = rate_limiter.get_status()
-        print(f"⏸️  请求过于频繁，请等待 {wait_time:.1f} 秒")
-        print(f"   已用: {status['recent_requests']}/{status['max_requests']} 请求 (每{status['time_window']}秒)")
+    # 从数据源获取
+    stocks = adapter.fetch_stock_data(symbols, use_cache=False)
 
-        # 如果有缓存，即使过期也返回
-        cached_data = cache.get(cache_key)
-        if cached_data:
-            print(f"📦 使用过期缓存数据")
-            return cached_data
-
-        return None
-
-    # 发起API请求
-    codes_str = ",".join(stock_codes)
-    url = API_URL.format(codes=codes_str)
-
-    try:
-        req = urllib.request.Request(url)
-        req.add_header('User-Agent', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36')
-        req.add_header('Referer', 'https://xueqiu.com/')
-
-        print(f"🌐 正在请求API: {codes_str}")
-        with urllib.request.urlopen(req, timeout=10) as response:
-            data = response.read().decode('gbk')
-
-        # 解析数据
-        stocks = parse_stock_data(data)
-
-        # 保存到缓存
-        if stocks and use_cache:
-            cache.set(cache_key, stocks)
-
-        return stocks
-
-    except urllib.error.HTTPError as e:
-        print(f"❌ HTTP错误: {e.code} - {e.reason}")
-        if e.code == 429:
-            print("   触发频率限制，请等待1-2分钟")
-        return None
-    except urllib.error.URLError as e:
-        print(f"❌ 网络错误: {e.reason}")
-        return None
-    except Exception as e:
-        print(f"❌ 未知错误: {e}")
-        return None
-
-def parse_stock_data(raw_data: str) -> List[Dict]:
-    """解析股票数据"""
-    if not raw_data or not raw_data.startswith('v_'):
-        return []
-
-    stocks = []
-    lines = raw_data.strip().split('\n')
-
-    for line in lines:
-        if not line.startswith('v_'):
-            continue
-
-        try:
-            # 去除开头的v_和结尾的";
-            content = line[2:].rstrip('";')
-            parts = content.split('~')
-
-            if len(parts) < 50:
-                continue
-
-            code = parts[2]
-            name = parts[1]
-
-            # 如果没有数据，跳过
-            if not code or code == '':
-                continue
-
-            stock = {
-                'code': code,
-                'name': name,
-                'price': parse_float(parts[3]),           # 当前价
-                'yesterday_close': parse_float(parts[4]), # 昨收
-                'open': parse_float(parts[5]),           # 今开
-                'high': parse_float(parts[33]),          # 最高
-                'low': parse_float(parts[34]),           # 最低
-                'volume': parse_float(parts[6]),         # 成交量（手）
-                'amount': parse_float(parts[37]),        # 成交额（元）
-                'timestamp': parse_timestamp(parts[30]),
-            }
-
-            # 计算涨跌幅
-            if stock['yesterday_close'] and stock['price']:
-                stock['change'] = stock['price'] - stock['yesterday_close']
-                stock['change_percent'] = (stock['change'] / stock['yesterday_close']) * 100
-            else:
-                stock['change'] = 0
-                stock['change_percent'] = 0
-
-            # 买1-买5
-            stock['buy1_price'] = parse_float(parts[9])
-            stock['buy1_volume'] = parse_float(parts[10])
-            stock['buy2_price'] = parse_float(parts[11])
-            stock['buy2_volume'] = parse_float(parts[12])
-            stock['buy3_price'] = parse_float(parts[13])
-            stock['buy3_volume'] = parse_float(parts[14])
-            stock['buy4_price'] = parse_float(parts[15])
-            stock['buy4_volume'] = parse_float(parts[16])
-            stock['buy5_price'] = parse_float(parts[17])
-            stock['buy5_volume'] = parse_float(parts[18])
-
-            # 卖1-卖5
-            stock['sell1_price'] = parse_float(parts[19])
-            stock['sell1_volume'] = parse_float(parts[20])
-            stock['sell2_price'] = parse_float(parts[21])
-            stock['sell2_volume'] = parse_float(parts[22])
-            stock['sell3_price'] = parse_float(parts[23])
-            stock['sell3_volume'] = parse_float(parts[24])
-            stock['sell4_price'] = parse_float(parts[25])
-            stock['sell4_volume'] = parse_float(parts[26])
-            stock['sell5_price'] = parse_float(parts[27])
-            stock['sell5_volume'] = parse_float(parts[28])
-
-            stocks.append(stock)
-
-        except Exception as e:
-            continue
+    # 保存到缓存
+    if stocks and use_cache:
+        cache.set('stock_data', {'stocks': stocks}, symbols=cache_key)
 
     return stocks
 
-def parse_float(value) -> Optional[float]:
-    """解析浮点数"""
-    try:
-        if value == '' or value is None:
-            return None
-        return float(value)
-    except:
-        return None
 
-def parse_timestamp(ts_str) -> Optional[str]:
-    """解析时间戳"""
-    try:
-        if not ts_str or ts_str == '':
-            return None
-        ts = datetime.strptime(ts_str, "%Y%m%d%H%M%S")
-        return ts.strftime("%Y-%m-%d %H:%M:%S")
-    except:
-        return None
+def fetch_historical_data(symbol: str, period: str = '1d', days: int = 30, use_cache: bool = True) -> list:
+    """
+    获取历史数据（使用数据适配器）
 
-def format_stock(stock: Dict) -> str:
-    """格式化股票信息"""
-    if not stock['price']:
-        return f"{stock['name']} ({stock['code']}) - 停牌或无数据"
+    Args:
+        symbol: 股票代码
+        period: 周期（1d=日线, 1w=周线, 1m=月线）
+        days: 天数
+        use_cache: 是否使用缓存
 
-    arrow = "↑" if stock['change'] > 0 else "↓" if stock['change'] < 0 else "→"
-    color = "\033[92m" if stock['change'] > 0 else "\033[91m" if stock['change'] < 0 else "\033[0m"
-    reset = "\033[0m"
+    Returns:
+        历史数据列表
+    """
+    adapter = get_adapter()
+    cache = get_cache()
 
-    return f"""
-{color}{stock['name']} ({stock['code']}){reset}
-  股价: {color}¥{stock['price']:.2f}{reset} {arrow}{color}{abs(stock['change']):.2f} ({abs(stock['change_percent']):.2f}%){reset}
-  今开: ¥{stock['open']:.2f} | 最高: ¥{stock['high']:.2f} | 最低: ¥{stock['low']:.2f}
-  成交量: {stock['volume']:,.0f} 手 | 成交额: ¥{stock['amount']/100000000:.2f} 亿
-  买1: ¥{stock['buy1_price']:.2f} ({stock['buy1_volume']:,.0f}手) | 卖1: ¥{stock['sell1_price']:.2f} ({stock['sell1_volume']:,.0f}手)
-  时间: {stock['timestamp']}
-"""
+    # 尝试从缓存获取
+    if use_cache:
+        cached_data = cache.get('historical_data', symbol=symbol, period=period, days=days)
 
-def get_rate_limiter_status() -> Dict[str, Any]:
-    """获取限流器状态"""
-    return rate_limiter.get_status()
+        if cached_data:
+            print(f"✅ [缓存] 使用缓存的历史数据")
+            return cached_data.get('candles', [])
 
-def clear_cache():
-    """清空缓存"""
-    cache.clear()
-    print("✅ 缓存已清空")
+    # 从数据源获取
+    candles = adapter.fetch_historical_data(symbol, period, days)
+
+    # 保存到缓存
+    if candles and use_cache:
+        cache.set('historical_data', {'candles': candles}, symbol=symbol, period=period, days=days)
+
+    return candles
+
+
+def test_fetch():
+    """测试数据获取"""
+    print("="*80)
+    print("🧪 测试数据获取模块")
+    print("="*80)
+
+    print("\n📊 测试实时数据:")
+    stocks = fetch_stock_data(['000063', '600519', '000858', '300750'])
+
+    for stock in stocks:
+        print(f"  {stock['symbol']} {stock['name']}: ¥{stock['price']:.2f} ({stock['change_percent']:+.2f}%)")
+
+    print("\n📊 测试缓存效果:")
+    print("  第二次获取（应该使用缓存）...")
+    stocks_cached = fetch_stock_data(['000063', '600519', '000858', '300750'])
+
+    print("\n✅ 测试完成")
+
+
+if __name__ == "__main__":
+    test_fetch()
