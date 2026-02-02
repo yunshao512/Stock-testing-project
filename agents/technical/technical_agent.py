@@ -17,6 +17,12 @@ sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..', 'scripts'))
 from stock_api import fetch_stock_data
 from historical_data import fetch_historical_data
 
+# 添加项目根目录到路径
+project_root = os.path.join(os.path.dirname(__file__), '..', '..')
+sys.path.insert(0, project_root)
+
+from models.pattern_recognition import PatternRecognizer
+
 
 @dataclass
 class TechnicalAnalysisResult:
@@ -134,53 +140,9 @@ class TechnicalAnalysisAgent:
             return "中位"
 
     def _recognize_patterns(self, candles: List[Dict]) -> List[str]:
-        """识别K线形态"""
-        patterns = []
-
-        if len(candles) < 3:
-            return patterns
-
-        # 底部横盘形态
-        recent_lows = [c['low'] for c in candles[-10:]]
-        if max(recent_lows) - min(recent_lows) < 0.05 * min(recent_lows):
-            patterns.append("底部横盘")
-
-        # 上升趋势细分（均线多头排列）
-        ma5 = sum(c['close'] for c in candles[-5:]) / 5
-        ma10 = sum(c['close'] for c in candles[-10:]) / 10
-        ma20 = sum(c['close'] for c in candles[-20:]) / 20
-
-        if ma5 > ma10 > ma20:
-            patterns.append("均线多头")
-
-        # 下降趋势细分（均线空头排列）
-        if ma5 < ma10 < ma20:
-            patterns.append("均线空头")
-
-        # 特殊K线形态
-        last = candles[-1]
-        prev = candles[-2]
-
-        # 吞没形态
-        if (last['close'] > prev['open'] and last['open'] < prev['close'] and
-            last['close'] > prev['close'] and last['open'] < prev['open']):
-            patterns.append("阳线吞没")
-
-        if (last['close'] < prev['open'] and last['open'] > prev['close'] and
-            last['close'] < prev['close'] and last['open'] > prev['open']):
-            patterns.append("阴线吞没")
-
-        # 金叉（简化版：5日线上穿10日线）
-        ma5_prev = sum(c['close'] for c in candles[-6:-1]) / 5
-        ma10_prev = sum(c['close'] for c in candles[-11:-1]) / 10
-        if ma5_prev <= ma10_prev and ma5 > ma10:
-            patterns.append("MA金叉")
-
-        # 死叉
-        if ma5_prev >= ma10_prev and ma5 < ma10:
-            patterns.append("MA死叉")
-
-        return patterns
+        """识别K线形态（使用高级形态识别器）"""
+        recognizer = PatternRecognizer()
+        return recognizer.recognize_all(candles)
 
     def _calculate_indicators(self, candles: List[Dict]) -> Dict:
         """计算技术指标"""
