@@ -1,0 +1,20 @@
+{
+  "stocks": [
+    {
+      "symbol": "sh600519=\"1",
+      "name": "贵州茅台",
+      "price": 1438.0,
+      "yesterday_close": 1401.0,
+      "change_percent": 2.6409707351891507,
+      "volume": 56587
+    },
+    {
+      "symbol": "sh000858=\"1",
+      "name": "500信息",
+      "price": 11595.25,
+      "yesterday_close": 12015.78,
+      "change_percent": -3.49981441071658,
+      "volume": 19167980
+    }
+  ]
+}
