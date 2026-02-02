@@ -1,0 +1,20 @@
+{
+  "symbol": "600519",
+  "action": "600519",
+  "confidence": 0.815,
+  "buy_price": 0.0,
+  "sell_price": 0.0,
+  "stop_loss": null,
+  "target_price": null,
+  "reasons": [
+    "技术面呈未知趋势",
+    "股价处于未知",
+    "财务状况良好",
+    "多空辩论看空"
+  ],
+  "technical_score": 0.0,
+  "fundamental_score": 0.4,
+  "sentiment_score": 0.55,
+  "overall_score": 0.28500000000000003,
+  "timestamp": "2026-02-02T18:33:26.740523"
+}
