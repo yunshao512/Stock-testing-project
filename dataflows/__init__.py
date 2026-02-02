@@ -11,3 +11,7 @@ __all__ = [
     'get_cache',
     'test_cache'
 ]
+
+# 基本面数据模块（内部使用）
+from .fundamental_data import FundamentalDataProvider, get_fundamental_provider, test_fundamental
+

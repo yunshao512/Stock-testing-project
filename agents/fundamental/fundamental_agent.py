@@ -6,8 +6,16 @@
 负责财务数据、估值模型、行业分析
 """
 
+import sys
+import os
 from typing import Dict, List
 from dataclasses import dataclass, field
+
+# 添加项目根目录到路径
+project_root = os.path.join(os.path.dirname(__file__), '..', '..')
+sys.path.insert(0, project_root)
+
+from dataflows.fundamental_data import get_fundamental_provider
 
 
 @dataclass
@@ -35,7 +43,7 @@ class FundamentalAnalysisAgent:
         """
         执行基本面分析
 
-        注意：目前为简化版本，未来需要接入真实财务数据源
+        使用真实财务数据源（Tushare、AkShare），如果不可用则使用模拟数据
 
         Args:
             symbol: 股票代码
@@ -46,38 +54,17 @@ class FundamentalAnalysisAgent:
         """
         result = FundamentalAnalysisResult()
 
-        # TODO: 接入真实财务数据源（如Tushare、AkShare）
-        # 目前使用模拟数据作为占位符
+        # 获取基本面数据
+        provider = get_fundamental_provider()
+        financial_data = provider.fetch_financial_data(symbol, use_cache=True)
 
-        # 模拟数据（不同板块有不同特征）
-        if symbol.startswith('60'):  # 上海主板
-            result.pe_ratio = 25.0
-            result.pb_ratio = 3.5
-            result.roe = 0.12
-            result.revenue_growth = 0.08
-            result.profit_growth = 0.10
-            result.debt_ratio = 0.45
-        elif symbol.startswith('00'):  # 深圳主板
-            result.pe_ratio = 30.0
-            result.pb_ratio = 4.0
-            result.roe = 0.15
-            result.revenue_growth = 0.12
-            result.profit_growth = 0.15
-            result.debt_ratio = 0.50
-        elif symbol.startswith('30'):  # 创业板
-            result.pe_ratio = 40.0
-            result.pb_ratio = 5.0
-            result.roe = 0.18
-            result.revenue_growth = 0.20
-            result.profit_growth = 0.25
-            result.debt_ratio = 0.40
-        else:
-            result.pe_ratio = 20.0
-            result.pb_ratio = 2.5
-            result.roe = 0.10
-            result.revenue_growth = 0.05
-            result.profit_growth = 0.06
-            result.debt_ratio = 0.55
+        # 填充数据
+        result.pe_ratio = financial_data.get('pe_ratio', 0.0)
+        result.pb_ratio = financial_data.get('pb_ratio', 0.0)
+        result.roe = financial_data.get('roe', 0.0)
+        result.revenue_growth = financial_data.get('revenue_growth', 0.0)
+        result.profit_growth = financial_data.get('profit_growth', 0.0)
+        result.debt_ratio = financial_data.get('debt_ratio', 0.0)
 
         # 判断估值
         if result.pe_ratio < 20:
@@ -102,7 +89,8 @@ class FundamentalAnalysisAgent:
         result.signals = self._generate_signals(result)
 
         if self.debug:
-            print(f"  ✅ 基本面分析完成，评分: {result.score*100:.0f}%")
+            source = financial_data.get('source', 'N/A')
+            print(f"  ✅ 基本面分析完成，评分: {result.score*100:.0f}% (来源: {source})")
             print(f"     估值: {result.valuation}, 财务健康: {result.financial_health}")
 
         return result
